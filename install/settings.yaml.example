@@ -1,0 +1,13 @@
+# <DSH_HOME>/settings.yaml 中需要改动的关键片段（其余设置保持不变）。
+
+agent-presets:
+  default: code-prompt-self   # 改为本仓库安装的自定义预设
+
+# 主对话模型保持不变（示例）：
+agent-default-model:
+  provider: deepseek-official
+  model: deepseek-v4-pro
+  reasoningEffort: max
+
+# 插件辅助调用（prompt 改写 / 画像学习）的模型在预设引擎行配置，
+# 默认 deepseek-v4-flash（快且省），可在预设行或可视化开关旁修改。
