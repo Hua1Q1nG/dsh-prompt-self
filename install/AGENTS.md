@@ -10,6 +10,8 @@
 - dsh-prompt-self-client（个人 Prompt 画像引擎）
 - dsh-prompt-dots（会话右侧 Prompt 白色小点导航：悬停预览 / 点击跳转）
 - dsh-global-updater（更新全局插件：设置 →「全局插件更新」按钮；DSH 桌面更新后启动自动检测执行）
+- dsh-pwsh-patch（宿主自愈补丁：每次启动自动检测并重打 pwsh 硬化补丁，桌面更新覆盖后自愈；状态见
+  设置 →「pwsh 硬化补丁」页、`$DSH_HOME/pwsh-patch/state.json` 与 `$DSH_HOME/pwsh-patch/UPDATE-GUIDE.md`）
 
 更新检测：
 - 用户要求「更新全局插件 / 更新所有插件 / 检查全部插件 / 做更新检测」且未点名单个插件时，严格按
@@ -23,6 +25,8 @@
 - 用户告知「桌面端软件已更新 / 更新了 DSH 桌面版」时：先执行 `$DSH_HOME/global-updater/UPDATE-GUIDE.md`
   第 2 节（自检自更新 dsh-global-updater 并适配新版本），再按总纲执行其余插件；用户也可直接在
   设置 →「全局插件更新」点击按钮完成同一流程（宿主已内置版本自动检测）。
+- pwsh 硬化补丁由 dsh-pwsh-patch 在每次启动时自动重打；若其 state 为 drift（上游代码变化导致
+  自动重打失败），按 `$DSH_HOME/pwsh-patch/UPDATE-GUIDE.md` 第 3 节人工移植并更新 payload.json。
 
 对模型的要求：
 - 若上下文末尾出现来源为 dsh-prompt-self-client 的「优化后的请求」消息，**以优化版为准执行**；不要重复自行优化，也不要向用户复述优化过程（仅当优化补上的假设会显著改变结果时，用一句话说明依据）。
