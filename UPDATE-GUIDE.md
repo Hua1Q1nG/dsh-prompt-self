@@ -6,7 +6,7 @@
 
 ## 0. 基线信息（当前已验证兼容的版本）
 
-- DSH Desktop：0.1.9（曾验证 0.1.7）
+- DSH Desktop：0.2.0（曾验证 0.1.7 / 0.1.9）
 - 核心依赖（全部 `@deepseek-ai/*`）：0.1.0-rc.6
 - cordis：4.0.1
 - 插件版本：dsh-prompt-self-client 0.1.0
@@ -37,16 +37,37 @@
 | 7 | 画像文件 | `skills\prompt-self-optimizer\profile.md` |
 | 8 | 全局指令 | `AGENTS.md` |
 | 9 | 默认预设 | `settings.yaml` 中 `agent-presets.default` 必须是 `code-prompt-self` |
+| 10 | PTC 预设引擎行（部署补丁） | `<安装目录>\resources\app\node_modules\@deepseek-ai\dsh\config\agent-presets\code\agent.cordis.yml` 末尾应有 `prompt-self-client` 引擎行（让 PTC 模式也运行引擎） |
 
-**已知更新副作用**：DSH Desktop 升级（如 0.1.7→0.1.9）曾把 `settings.yaml` 的
+**已知更新副作用**：DSH Desktop 升级（如 0.1.7→0.1.9、0.1.9→0.2.0）曾把 `settings.yaml` 的
 `agent-presets.default` 重置回 `code`（其余文件不受影响）。第 9 项若不等于
 `code-prompt-self`，立即改回并提示用户重启应用（重启前新会话不会挂载引擎）。
+另外桌面更新会整体替换 `<安装目录>\resources\app`，第 10 项的 PTC 预设部署补丁会随之丢失：
+按第 10 项检查，缺失时按第 2.1 节模板重打（内置预设无法被用户预设同名覆盖，必须补丁应用安装目录）。
 
 运行中应用的自检（可选但推荐）：
 - `GET http://127.0.0.1:<当前端口>/prompt-self/profile` 应返回 200 且 `"ok":true`；
 - `GET http://127.0.0.1:<当前端口>/prompt-self/config` 应返回 200 JSON；
 - 首页 HTML 的 `window.__DSH_BOOT__` 图谱中应含 `dsh-prompt-self-client` 条目。
 当前端口从 `%APPDATA%\dsh-desktop\logs\harness.log` 末尾的 `dsh web: http://...` 读取。
+
+### 2.1 PTC 预设补丁重打模板（第 10 项缺失时）
+
+在内置 PTC 预设 `<安装目录>\resources\app\node_modules\@deepseek-ai\dsh\config\agent-presets\code\agent.cordis.yml`
+末尾追加引擎行（`name` 用正斜杠绝对路径，与 code-prompt-self 预设一致；路径按本机实际调整）：
+
+```yaml
+- id: prompt-self-client
+  name: 'C:/Users/<用户>/AppData/Roaming/dsh-desktop/harness/profiles/node_modules/dsh-prompt-self-client/lib/index.js'
+  config:
+    enabled: true
+    profilePath: 'C:/Users/<用户>/AppData/Roaming/dsh-desktop/harness/skills/prompt-self-optimizer/profile.md'
+    provider: deepseek-official
+    model: deepseek-v4-flash
+```
+
+重打后用 js-yaml + `entryListSchema`（`@deepseek-ai/cordis-plugin-include`）校验该文件可解析，
+并提示用户重启应用（预设发现会实时重读，但重启最稳妥）。
 
 ## 3. 完整体检（核心依赖版本变化时必做）
 
