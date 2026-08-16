@@ -9,6 +9,7 @@
 已部署插件清单：
 - dsh-prompt-self-client（个人 Prompt 画像引擎）
 - dsh-prompt-dots（会话右侧 Prompt 白色小点导航：悬停预览 / 点击跳转）
+- dsh-global-updater（更新全局插件：设置 →「全局插件更新」按钮；DSH 桌面更新后启动自动检测执行）
 
 更新检测：
 - 用户要求「更新全局插件 / 更新所有插件 / 检查全部插件 / 做更新检测」且未点名单个插件时，严格按
@@ -17,7 +18,11 @@
 - 用户点名单个插件（如「检查 prompt-self 兼容性 / 检查 prompt-dots」）时，严格按其专属指南执行：
   prompt-self → `$DSH_HOME/prompt-self/UPDATE-GUIDE.md`；prompt-dots → `$DSH_HOME/prompt-dots/UPDATE-GUIDE.md`。
 - 用户安装新插件后：主动在总纲第 1 节登记表补一行（插件名 / 本地目录 / 指南 / 仓库），
-  无专属指南的插件按总纲第 4 节通用检查执行，保持「更新全局插件」始终覆盖所有插件。
+  并同步更新 `$DSH_HOME/global-updater/registry.json`；无专属指南的插件按总纲第 4 节通用检查执行，
+  保持「更新全局插件」始终覆盖所有插件。
+- 用户告知「桌面端软件已更新 / 更新了 DSH 桌面版」时：先执行 `$DSH_HOME/global-updater/UPDATE-GUIDE.md`
+  第 2 节（自检自更新 dsh-global-updater 并适配新版本），再按总纲执行其余插件；用户也可直接在
+  设置 →「全局插件更新」点击按钮完成同一流程（宿主已内置版本自动检测）。
 
 对模型的要求：
 - 若上下文末尾出现来源为 dsh-prompt-self-client 的「优化后的请求」消息，**以优化版为准执行**；不要重复自行优化，也不要向用户复述优化过程（仅当优化补上的假设会显著改变结果时，用一句话说明依据）。

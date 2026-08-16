@@ -14,11 +14,20 @@
 
 | 插件 | 本地包目录（相对 `<DSH_HOME>`） | 专属指南 | GitHub 仓库（分支 main） | 仓库内源目录 |
 |---|---|---|---|---|
+| dsh-global-updater（更新器自身） | `profiles\node_modules\dsh-global-updater` | `global-updater\UPDATE-GUIDE.md` | `Hua1Q1nG/dsh-global-updater` | `lib/ + package.json + cordis.patch.yml` + `tests/` + `UPDATE-GUIDE.md` + `install/` |
 | dsh-prompt-self-client | `profiles\node_modules\dsh-prompt-self-client` | `prompt-self\UPDATE-GUIDE.md` | `Hua1Q1nG/dsh-prompt-self` | `plugin/` + `install/`（含 AGENTS.md、GLOBAL-UPDATE-GUIDE.md 的规范源） |
 | dsh-prompt-dots | `profiles\node_modules\dsh-prompt-dots` | `prompt-dots\UPDATE-GUIDE.md` | `Hua1Q1nG/dsh-prompt-dots` | `lib/ + package.json + cordis.patch.yml` + `tests/` + `UPDATE-GUIDE.md` |
 
 **新插件登记规则**：用户安装新插件后，Agent 主动在本表追加一行（插件名、本地目录、是否有专属指南、
 仓库地址、仓库内源目录），并在两个仓库的对应位置同步本表更新。无专属指南的新插件按第 4 节通用检查执行。
+
+## 1.5 第 0 步：先自检自更新 dsh-global-updater（桌面更新后 / 用户告知已更新时必做）
+
+1. 严格按 `$DSH_HOME/global-updater/UPDATE-GUIDE.md` 第 2 节执行：文件与语法 → API 面核对 →
+   自更新（与本仓库比对并覆盖，重启生效）→ 自测 4/4 → 运行态（/global-updater/state 等）。
+2. 也可以直接让用户在 **设置 →「全局插件更新」** 点击「更新全局插件」按钮 —— 宿主会自动执行
+   同样的顺序（自更新优先，随后全部插件）；DSH 桌面版更新后启动时插件还会自动检测版本号变化并执行一次。
+3. 本步骤通过后，再继续下面的环境级检查与逐插件流程。
 
 ## 2. 环境级检查（对全部插件生效，每次必做）
 
@@ -64,7 +73,9 @@
   3. 同步后报告仓库 URL 与提交摘要，提醒用户撤销 token。
 
 共享文档同步规则：`AGENTS.md` 与 `GLOBAL-UPDATE-GUIDE.md` 的规范源在 `dsh-prompt-self` 仓库的 `install/` 目录；
-两者都必须同步到 `<DSH_HOME>`（`AGENTS.md` 与 `GLOBAL-UPDATE-GUIDE.md` 各一份），并在仓库间保持一致。
+镜像在 `dsh-global-updater` 与 `dsh-prompt-dots` 仓库。三者都必须同步到 `<DSH_HOME>`（`AGENTS.md` 与
+`GLOBAL-UPDATE-GUIDE.md` 各一份），并在仓库间保持一致。插件登记表以 `<DSH_HOME>/global-updater/registry.json`
+为机器可读源（dsh-global-updater 维护），本表与之对应。
 
 ## 6. 报告模板（Agent 向用户汇报用）
 
