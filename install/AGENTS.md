@@ -6,8 +6,18 @@
 
 可视化控制：设置 →「Prompt 画像」页可查看画像、切换「自动改写优化」与「自动学习画像」开关（关闭后引擎对应功能立即停止）。
 
-更新检测：用户要求「做更新检测 / 升级检查 / 检查 prompt-self 兼容性」时，严格按
-`$DSH_HOME/prompt-self/UPDATE-GUIDE.md`（用户也可能直接粘贴该文档内容）逐节执行。
+已部署插件清单：
+- dsh-prompt-self-client（个人 Prompt 画像引擎）
+- dsh-prompt-dots（会话右侧 Prompt 白色小点导航：悬停预览 / 点击跳转）
+
+更新检测：
+- 用户要求「更新全局插件 / 更新所有插件 / 检查全部插件 / 做更新检测」且未点名单个插件时，严格按
+  `$DSH_HOME/GLOBAL-UPDATE-GUIDE.md`（用户也可能直接粘贴该文档内容）逐节执行：自动发现本机部署的
+  全部插件（含未来新安装的插件），逐个体检/修复并同步 GitHub，最后按总纲第 6 节模板汇报。
+- 用户点名单个插件（如「检查 prompt-self 兼容性 / 检查 prompt-dots」）时，严格按其专属指南执行：
+  prompt-self → `$DSH_HOME/prompt-self/UPDATE-GUIDE.md`；prompt-dots → `$DSH_HOME/prompt-dots/UPDATE-GUIDE.md`。
+- 用户安装新插件后：主动在总纲第 1 节登记表补一行（插件名 / 本地目录 / 指南 / 仓库），
+  无专属指南的插件按总纲第 4 节通用检查执行，保持「更新全局插件」始终覆盖所有插件。
 
 对模型的要求：
 - 若上下文末尾出现来源为 dsh-prompt-self-client 的「优化后的请求」消息，**以优化版为准执行**；不要重复自行优化，也不要向用户复述优化过程（仅当优化补上的假设会显著改变结果时，用一句话说明依据）。
