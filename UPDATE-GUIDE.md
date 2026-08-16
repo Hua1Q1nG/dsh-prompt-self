@@ -1,0 +1,144 @@
+# dsh-prompt-self 更新检测与升级指南
+
+> 本文档是给 DSH Agent 执行的操作手册。用户每次更新 DSH 桌面版后，会把本文档交给 Agent；
+> Agent 必须**逐节执行**下面的检测与修复，最后向用户报告结论，并在必要时同步 GitHub 仓库。
+
+## 0. 基线信息（当前已验证兼容的版本）
+
+- DSH Desktop：0.1.9（曾验证 0.1.7）
+- 核心依赖（全部 `@deepseek-ai/*`）：0.1.0-rc.6
+- cordis：4.0.1
+- 插件版本：dsh-prompt-self-client 0.1.0
+- GitHub 仓库：https://github.com/Hua1Q1nG/dsh-prompt-self（分支 main）
+- 本机 DSH 家目录 `<DSH_HOME>`：`C:\Users\<用户名>\AppData\Roaming\dsh-desktop\harness`
+
+## 1. 检测更新（第 1 步：判断发生了什么变化）
+
+1. 读取桌面应用版本：`<安装目录>\resources\app\package.json` 的 `version`（安装目录通常是 `<安装目录>`，以实际为准）。
+2. 读取 DSH 核心版本：`<安装目录>\resources\app\node_modules\@deepseek-ai\dsh\package.json` 的 `version`。
+3. 读取 harness 侧版本：`<DSH_HOME>\profiles\node_modules\@deepseek-ai\dsh\package.json` 的 `version`。
+4. 结论判定：
+   - 仅桌面壳版本号变化、核心依赖不变（仍是 rc.6 系列）→ 大概率兼容，执行第 2 节的快速体检；
+   - 核心依赖版本变化（rc.6 → rc.7 等）→ 必须执行第 3 节的完整体检，重点核对第 4 节的 API 面。
+
+## 2. 快速体检（每次更新后必做）
+
+逐项确认以下路径存在且内容完整（用文件工具读取，不要假设）：
+
+| # | 检查项 | 路径（相对 `<DSH_HOME>`） |
+|---|---|---|
+| 1 | 插件包引擎 | `profiles\node_modules\dsh-prompt-self-client\lib\index.js` |
+| 2 | 插件包客户端 | `profiles\node_modules\dsh-prompt-self-client\lib\client.js` |
+| 3 | 插件包清单 | `profiles\node_modules\dsh-prompt-self-client\package.json` |
+| 4 | web profile 补丁行 | `profiles\web\cordis.patch.yml` 中应含 `prompt-self-client` 行 |
+| 5 | 用户预设 | `.agent-presets\code-prompt-self\agent.cordis.yml`（末尾应有 `prompt-self-client` 引擎行） |
+| 6 | skill | `skills\prompt-self-optimizer\SKILL.md` |
+| 7 | 画像文件 | `skills\prompt-self-optimizer\profile.md` |
+| 8 | 全局指令 | `AGENTS.md` |
+| 9 | 默认预设 | `settings.yaml` 中 `agent-presets.default` 必须是 `code-prompt-self` |
+
+**已知更新副作用**：DSH Desktop 升级（如 0.1.7→0.1.9）曾把 `settings.yaml` 的
+`agent-presets.default` 重置回 `code`（其余文件不受影响）。第 9 项若不等于
+`code-prompt-self`，立即改回并提示用户重启应用（重启前新会话不会挂载引擎）。
+
+运行中应用的自检（可选但推荐）：
+- `GET http://127.0.0.1:<当前端口>/prompt-self/profile` 应返回 200 且 `"ok":true`；
+- `GET http://127.0.0.1:<当前端口>/prompt-self/config` 应返回 200 JSON；
+- 首页 HTML 的 `window.__DSH_BOOT__` 图谱中应含 `dsh-prompt-self-client` 条目。
+当前端口从 `%APPDATA%\dsh-desktop\logs\harness.log` 末尾的 `dsh web: http://...` 读取。
+
+## 3. 完整体检（核心依赖版本变化时必做）
+
+1. 把 GitHub 仓库（或本机 `<DSH_HOME>\prompt-self\repo` 本地副本）放进任意能解析
+   `@deepseek-ai/*` 依赖的目录（如 `<DSH_HOME>\profiles` 下），运行：
+   ```
+   node --test <仓库>\tests\engine.test.mjs
+   ```
+   期望：6 个用例全部通过。任一失败 → 对照第 4 节排查 API 变化，修复插件代码。
+2. 无头实机 E2E（用真实 LLM 验证全链路）：
+   ```
+   <安装目录>\resources\app\node_modules\@deepseek-ai\dsh\lib\bin.js --profile headless --patch <临时补丁> "任务文本"
+   ```
+   临时补丁内容（profilePath 指向临时画像副本）：
+   ```yaml
+   - insert:
+       - id: prompt-self-e2e
+         name: file:///<DSH_HOME>/profiles/node_modules/dsh-prompt-self-client/lib/index.js
+         config:
+           enabled: true
+           forceEngine: true
+           profilePath: <临时画像副本绝对路径>
+           provider: deepseek-official
+           model: deepseek-v4-flash
+   ```
+   期望：会话日志出现 `session/prompt-self-optimized` 事件、画像新增学习记录。
+   若事件缺失：
+   - 辅助模型是推理型（如 deepseek-v4-flash 带 reasoning）时，`optimizeMaxTokens` 若太小
+     （<800），推理会耗尽预算导致改写输出为空 → 引擎合法跳过。默认已调至 1200，
+     若模型再次升级导致推理变长，继续调大该值（预设引擎行 config 或插件 defaultConfig）。
+   - headless 一次性进程的「学习」调用可能在进程退出竞态中丢失凭据（MISSING_CREDENTIAL），
+     属 headless 独有现象；桌面长驻应用不受影响。判定以 `prompt-self-optimized` 事件为准。
+
+## 4. 插件依赖的 API 面清单（版本变化时逐项 grep 核对）
+
+插件（`lib/index.js` 与 `lib/client.js`）依赖以下 DSH API。升级核心依赖后，用 grep 在
+`<安装目录>\resources\app\node_modules\@deepseek-ai\<包>\lib\index.js` 核对每个符号仍存在：
+
+| 包 | 依赖符号/机制 |
+|---|---|
+| @deepseek-ai/dsh-llm | `BlockAssembler`、`createUserMessage`、`ctx.get("llm").stream(options)`（options：provider/model/messages/system/maxTokens/sessionId/purpose/signal） |
+| @deepseek-ai/dsh-scope | `scopeOf`、`scopeTarget`、`bindScopeParent`、`createScope` |
+| @deepseek-ai/dsh-session | `session.events`、`session.append(type, data)`、事件类型 `user/message`（data.source.kind==="user"）、`turn/end` |
+| @deepseek-ai/dsh-agent | `agent/pre-step` waterfall（payload 含 agent/messages/signal，返回 {kind:"enter", messages}） |
+| @deepseek-ai/dsh-host-webserver | `ctx.inject(["webServer"])` → `webServer.register({kind:"exact", path, handler(req,res)})` |
+| @deepseek-ai/dsh-skill-filesystem | 用户级 skill 目录 `<DSH_HOME>/skills/**/SKILL.md`（frontmatter: name+description） |
+| @deepseek-ai/dsh-agent-instructions | 用户全局指令 `<DSH_HOME>/AGENTS.md` |
+| @deepseek-ai/dsh-agent-presets | 用户预设目录 `<DSH_HOME>/.agent-presets/<id>/agent.cordis.yml`（id 匹配 `^[a-z0-9][a-z0-9-]*$`，行名可绝对路径/相对路径） |
+| @deepseek-ai/dsh-client-modules | package.json `dsh.client`（platform/inject）+ `exports["./client"]`；bundle 注册 `window.__ModuleLoader__.load({id, factory})` |
+| @deepseek-ai/dsh-client-runtime | 客户端服务 `slots`（SlotRegistry：`slots.inject(key, cb)` / `slots.register(spec, render)`） |
+| @deepseek-ai/dsh-client-ui-slots | 槽位键：`settings.section`、`settings.<id>.item`、`conversation.input.dock` |
+| @deepseek-ai/dsh-client-ui-settings | 设置面板按 `settings.section` 槽位渲染导航（label 支持函数） |
+| @deepseek-ai/dsh-session-persistence-jsonl | 会话日志 `.jsonl.zstd`（多帧 zstd 容器，不解压也能通过 E2E 行为验证） |
+
+若某个符号消失或签名变化：修改 `plugin/lib/index.js` / `plugin/lib/client.js` 适配新版本，
+重跑第 3 节测试，通过后进入第 5 节同步仓库。
+
+## 5. 同步 GitHub 仓库（插件或文档有改动时）
+
+本机到 github.com 主站被网络阻断（git push / 设备码不可达），但 `api.github.com` 可达。
+同步方式（已封装过，按此流程执行）：
+
+1. 向用户索要一个有 `repo` 权限的短期 Personal Access Token（用完请用户撤销）。
+2. 通过 Git Data API 单提交上传（不落盘令牌）：
+   - 校验：`GET /user`（Authorization: token <令牌>）
+   - 取 HEAD：`GET /repos/Hua1Q1nG/dsh-prompt-self/branches/main` → commit.sha →
+     `GET /repos/Hua1Q1nG/dsh-prompt-self/git/commits/<sha>` → tree.sha
+   - 每个文件：`POST /repos/Hua1Q1nG/dsh-prompt-self/git/blobs`
+     {content: base64(utf8), encoding: "base64"}
+   - 建树：`POST .../git/trees` {base_tree: <旧tree.sha>, tree: [{path, mode:"100644", type:"blob", sha}]}
+   - 提交：`POST .../git/commits` {message, tree, parents: [<HEAD>]}
+   - 更新引用：`PATCH .../git/refs/heads/main` {sha: <新commit>, force: false}
+3. 完成后提示用户撤销令牌，并报告仓库 URL。
+
+仓库结构（改动需同步到仓库的对应路径）：
+```
+plugin/                 ← <DSH_HOME>/profiles/node_modules/dsh-prompt-self-client/ 的源
+install/code-prompt-self/          ← <DSH_HOME>/.agent-presets/code-prompt-self/ 的源
+install/web-profile.cordis.patch.yml
+install/skills/prompt-self-optimizer/    ← SKILL.md 与 profile.md 模板
+install/AGENTS.md                ← <DSH_HOME>/AGENTS.md 的源
+install/settings.yaml.example
+tests/engine.test.mjs            ← 引擎自测套件
+UPDATE-GUIDE.md（本文件）        ← 每次更新后请同步最新版
+```
+
+## 6. 报告模板（Agent 向用户汇报用）
+
+```
+更新检测完成：
+- 桌面版本：X → Y；核心依赖：Z（变化/不变）
+- 快速体检：N/N 通过；异常项与修复：…
+- 完整体检（如执行）：测试 6/6，无头 E2E 事件：…
+- 需要用户操作：重启应用 / 提供令牌 / 无
+- GitHub 同步：已同步 / 无需同步 / 已请求令牌
+```

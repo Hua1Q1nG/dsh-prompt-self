@@ -151,8 +151,8 @@ copy install\AGENTS.md "<DSH_HOME>\AGENTS.md"
 | `statePath` | `profilePath + ".state.json"` | 已学习配对去重状态 |
 | `configPath` | `profilePath + ".config.json"` | 运行时开关文件 |
 | `provider` / `model` | `deepseek-official` / `deepseek-v4-flash` | 辅助 LLM 路由 |
-| `optimizeMaxTokens` | `400` | 改写输出上限 |
-| `learnMaxTokens` | `2400` | 学习输出上限 |
+| `optimizeMaxTokens` | `1200` | 改写输出上限（推理型辅助模型需留出推理余量） |
+| `learnMaxTokens` | `3200` | 学习输出上限 |
 | `optimizeTimeoutMs` / `learnTimeoutMs` | `30000` / `120000` | 调用超时 |
 | `maxPromptChars` / `maxOutputChars` | `6000` / `10000` | 学习样本截断 |
 | `maxHabits` / `maxRules` / `maxRecords` | `40` / `40` / `30` | 画像容量上限 |
