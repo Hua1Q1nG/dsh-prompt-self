@@ -208,3 +208,6 @@
     enabled: true
     provider: deepseek-official
     model: deepseek-v4-flash
+    maxHabits: 20
+    maxRules: 18
+    maxRecords: 10

@@ -134,8 +134,10 @@ test("engine: turn/end 自动学习并更新画像", async () => {
     await new Promise((r) => setTimeout(r, 250));
     assert.equal(calls.learn, 1);
     const profile = readFileSync(join(tmp, "profile.md"), "utf8");
-    assert.ok(profile.includes("帮我写个函数"));
-    assert.ok(profile.includes("可运行示例"));
+    assert.ok(!profile.includes("## 学习记录"));
+    const records = readFileSync(join(tmp, "profile.records.md"), "utf8");
+    assert.ok(records.includes("帮我写个函数"));
+    assert.ok(records.includes("可运行示例"));
     assert.ok(appends.some((a) => a.type === "session/prompt-self-learned"));
     assert.ok(existsSync(join(tmp, "profile.md.state.json")));
     scope.dispose();
@@ -232,6 +234,48 @@ test("web routes: 画像与开关端点", async () => {
     assert.ok(Array.isArray(profile.habits) && profile.habits.length >= 1);
     assert.ok(Array.isArray(profile.records));
     assert.equal(profile.optimizeEnabled, false);
+  } finally {
+    rmSync(tmp, { recursive: true, force: true });
+  }
+});
+
+test("engine: 旧单文件画像自动迁移学习记录到档案", async () => {
+  const tmp = mkdtempSync(join(tmpdir(), "dsh-ps-test-"));
+  try {
+    const legacy = [
+      "# 个人 Prompt 画像（由 dsh-prompt-self-client 自动维护）",
+      "",
+      "## 习惯清单",
+      "- [交付习惯] 中文交流 → 中文回复。",
+      "",
+      "## 防幻觉规则",
+      "- 未经验证的交付视为未完成。",
+      "",
+      "## 学习记录",
+      "",
+      "### 2026-01-01 · 旧记录标题",
+      "- 原始请求：旧请求",
+      ""
+    ].join("\n");
+    writeFileSync(join(tmp, "profile.md"), legacy, "utf8");
+    const calls = { optimize: 0, learn: 0 };
+    const { scope } = await bootEngine(tmp, calls);
+    const scoped = scope.ctx;
+    const appends = [];
+    const session = makeSession("s1", [
+      { type: "user/message", data: { source: { kind: "user" }, content: [{ type: "text", text: "帮我写个函数" }] } },
+      { type: "assistant/message", data: { message: { source: { kind: "model" }, content: [{ type: "text", text: "好的" }] } } }
+    ], appends);
+    scoped.emit("session/event", session, { type: "turn/end" });
+    await new Promise((r) => setTimeout(r, 250));
+    assert.equal(calls.learn, 1);
+    const core = readFileSync(join(tmp, "profile.md"), "utf8");
+    assert.ok(!core.includes("## 学习记录"));
+    assert.ok(core.includes("## 习惯清单"));
+    const records = readFileSync(join(tmp, "profile.records.md"), "utf8");
+    assert.ok(records.includes("旧记录标题"));
+    assert.ok(records.includes("帮我写个函数"));
+    scope.dispose();
   } finally {
     rmSync(tmp, { recursive: true, force: true });
   }

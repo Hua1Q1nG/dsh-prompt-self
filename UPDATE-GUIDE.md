@@ -9,7 +9,7 @@
 - DSH Desktop：0.2.0（曾验证 0.1.7 / 0.1.9）
 - 核心依赖（全部 `@deepseek-ai/*`）：0.1.0-rc.6
 - cordis：4.0.1
-- 插件版本：dsh-prompt-self-client 0.1.0
+- 插件版本：dsh-prompt-self-client 0.2.0（画像分级版）
 - GitHub 仓库：https://github.com/Hua1Q1nG/dsh-prompt-self（分支 main）
 - 本机 DSH 家目录 `<DSH_HOME>`：`C:\Users\<用户名>\AppData\Roaming\dsh-desktop\harness`
 
@@ -39,6 +39,7 @@
 | 9 | 默认预设 | `settings.yaml` 中 `agent-presets.default` 必须是 `code-prompt-self` |
 | 10 | PTC 预设引擎行（部署补丁） | `<安装目录>\resources\app\node_modules\@deepseek-ai\dsh\config\agent-presets\code\agent.cordis.yml` 末尾应有 `prompt-self-client` 引擎行（让 PTC 模式也运行引擎） |
 | 11 | 事件类型白名单补丁（部署补丁） | `<安装目录>\resources\app\node_modules\@deepseek-ai\dsh-session\lib\index.js`（及 `lib\types\known-event-types.js`）的 `KNOWN_SESSION_EVENT_TYPES` 中必须含 `session/prompt-self-optimized` 与 `session/prompt-self-learned`；缺失时按第 2.2 节重打 |
+| 12 | 学习记录档案 | `skills\prompt-self-optimizer\profile.records.md`（0.2.0 起，重启后首次学习自动生成） |
 
 **已知更新副作用**：DSH Desktop 升级（如 0.1.7→0.1.9、0.1.9→0.2.0）曾把 `settings.yaml` 的
 `agent-presets.default` 重置回 `code`（其余文件不受影响）。第 9 项若不等于
@@ -65,6 +66,9 @@
     profilePath: 'C:/Users/<用户>/AppData/Roaming/dsh-desktop/harness/skills/prompt-self-optimizer/profile.md'
     provider: deepseek-official
     model: deepseek-v4-flash
+    maxHabits: 20
+    maxRules: 18
+    maxRecords: 10
 ```
 
 重打后用 js-yaml + `entryListSchema`（`@deepseek-ai/cordis-plugin-include`）校验该文件可解析，
@@ -99,6 +103,19 @@
 原始文件备份为同目录 `session.jsonl.zstd.bak-2026-08-17T07-15-13`。
 带 `ignorable` 标记的日志即使白名单补丁丢失也能正常 resume，无需再次修复。
 
+### 2.3 画像分级（核心 + 学习记录档案；0.2.0 起）
+
+0.2.0 起画像分为两级，学习不再把学习记录写回核心文件：
+
+- `skills\prompt-self-optimizer\profile.md`：核心画像（习惯清单 + 防幻觉规则），改写调用只注入这部分；
+- `skills\prompt-self-optimizer\profile.records.md`：学习记录档案（插件自动生成，容量 `maxRecords`）。
+
+关键行为：
+- 旧版单文件画像（含「## 学习记录」节）会在重启后首次学习时自动迁移：学习记录移入档案，核心文件不再保留该节；
+- 改写调用注入的画像总长受 `maxProfileChars`（默认 6000 字符）截断保护；
+- `maxHabits / maxRules / maxRecords` 需在用户预设引擎行与 PTC 内置补丁行（第 10 项）两处保持一致（当前 20 / 18 / 10）；
+- 画像面板的「学习记录」读取档案文件；档案缺失且核心文件含旧学习记录时回退读取核心文件（等待首次学习迁移）。
+
 ## 3. 完整体检（核心依赖版本变化时必做）
 
 1. 把 GitHub 仓库（或本机 `<DSH_HOME>\prompt-self\repo` 本地副本）放进任意能解析
@@ -106,7 +123,7 @@
    ```
    node --test <仓库>\tests\engine.test.mjs
    ```
-   期望：6 个用例全部通过。任一失败 → 对照第 4 节排查 API 变化，修复插件代码。
+   期望：7 个用例全部通过（含画像分级与旧单文件迁移用例）。任一失败 → 对照第 4 节排查 API 变化，修复插件代码。
 2. 无头实机 E2E（用真实 LLM 验证全链路）：
    ```
    <安装目录>\resources\app\node_modules\@deepseek-ai\dsh\lib\bin.js --profile headless --patch <临时补丁> "任务文本"
@@ -190,7 +207,7 @@ UPDATE-GUIDE.md（本文件）        ← 每次更新后请同步最新版
 更新检测完成：
 - 桌面版本：X → Y；核心依赖：Z（变化/不变）
 - 快速体检：N/N 通过；异常项与修复：…
-- 完整体检（如执行）：测试 6/6，无头 E2E 事件：…
+- 完整体检（如执行）：测试 7/7，无头 E2E 事件：…
 - 需要用户操作：重启应用 / 提供令牌 / 无
 - GitHub 同步：已同步 / 无需同步 / 已请求令牌
 ```

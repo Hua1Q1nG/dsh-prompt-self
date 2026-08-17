@@ -148,6 +148,7 @@ copy install\AGENTS.md "<DSH_HOME>\AGENTS.md"
 | `enabled` | `true` | 组合级主开关 |
 | `forceEngine` | `false` | 单组合（无预设作用域）profile 下强制启用引擎（测试用） |
 | `profilePath` | `<DSH_HOME>/skills/prompt-self-optimizer/profile.md` | 画像文件路径 |
+| `recordsPath` | `<DSH_HOME>/skills/prompt-self-optimizer/profile.records.md` | 学习记录档案路径（默认自动推导，0.2.0） |
 | `statePath` | `profilePath + ".state.json"` | 已学习配对去重状态 |
 | `configPath` | `profilePath + ".config.json"` | 运行时开关文件 |
 | `provider` / `model` | `deepseek-official` / `deepseek-v4-flash` | 辅助 LLM 路由 |
@@ -155,7 +156,8 @@ copy install\AGENTS.md "<DSH_HOME>\AGENTS.md"
 | `learnMaxTokens` | `3200` | 学习输出上限 |
 | `optimizeTimeoutMs` / `learnTimeoutMs` | `30000` / `120000` | 调用超时 |
 | `maxPromptChars` / `maxOutputChars` | `6000` / `10000` | 学习样本截断 |
-| `maxHabits` / `maxRules` / `maxRecords` | `40` / `40` / `30` | 画像容量上限 |
+| `maxHabits` / `maxRules` / `maxRecords` | `40` / `40` / `30`（预设行已设 `20 / 18 / 10`） | 画像容量上限 |
+| `maxProfileChars` | `6000` | 改写调用注入画像的总长截断（字符，0.2.0） |
 
 ### 运行时开关（可视化 UI 写入）
 
@@ -193,7 +195,7 @@ node --test <仓库路径>\tests\engine.test.mjs
 
 **想暂停一切？** 设置页关掉两个开关，或把预设行的 `enabled` 改为 `false` 后重启。
 
-**画像文件在哪？** `<DSH_HOME>/skills/prompt-self-optimizer/profile.md`（可手动编辑，请保持三节结构）。
+**画像文件在哪？** `<DSH_HOME>/skills/prompt-self-optimizer/profile.md`（核心画像：习惯清单 + 防幻觉规则，可手动编辑；学习记录由插件自动维护在同目录 `profile.records.md`）。
 
 **换机器 / 升级 DSH 后？** 重新执行安装步骤；若 DSH 自带的 `code` 预设更新，建议以新版为基准重做 `install/code-prompt-self/agent.cordis.yml`（只多了末尾的引擎行）。
 

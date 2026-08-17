@@ -1,6 +1,6 @@
 {
   "name": "dsh-prompt-self-client",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Personal prompt-self optimizer: message-level prompt rewriting and automatic profile learning (dual-face DSH client plugin).",
   "private": true,
   "type": "module",

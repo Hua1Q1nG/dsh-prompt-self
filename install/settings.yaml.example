@@ -11,3 +11,10 @@ agent-default-model:
 
 # 插件辅助调用（prompt 改写 / 画像学习）的模型在预设引擎行配置，
 # 默认 deepseek-v4-flash（快且省），可在预设行或可视化开关旁修改。
+
+# 画像容量与分级（0.2.0 起，写入预设引擎行 config，可选）：
+#   maxHabits: 20            # 习惯清单上限（当前部署值）
+#   maxRules: 18             # 防幻觉规则上限（当前部署值）
+#   maxRecords: 10           # 学习记录档案上限（profile.records.md）
+#   recordsPath: <绝对路径>   # 学习记录档案路径（默认同目录 profile.records.md）
+#   maxProfileChars: 6000    # 改写调用注入画像的总长截断（字符）
