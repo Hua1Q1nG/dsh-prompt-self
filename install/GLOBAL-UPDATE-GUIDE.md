@@ -15,7 +15,7 @@
 | 插件 | 本地包目录（相对 `<DSH_HOME>`） | 专属指南 | GitHub 仓库（分支 main） | 仓库内源目录 |
 |---|---|---|---|---|
 | dsh-global-updater（更新器自身） | `profiles\node_modules\dsh-global-updater` | `global-updater\UPDATE-GUIDE.md` | `Hua1Q1nG/dsh-global-updater` | `lib/ + package.json + cordis.patch.yml` + `tests/` + `UPDATE-GUIDE.md` + `install/` |
-| dsh-prompt-self-client | `profiles\node_modules\dsh-prompt-self-client` | `prompt-self\UPDATE-GUIDE.md` | `Hua1Q1nG/dsh-prompt-self` | `plugin/` + `install/`（含 AGENTS.md、GLOBAL-UPDATE-GUIDE.md 的规范源） |
+| dsh-prompt-self-client | `profiles\node_modules\dsh-prompt-self-client` | `prompt-self\UPDATE-GUIDE.md` | `Hua1Q1nG/dsh-prompt-self` | `lib/` + `package.json` + `cordis.patch.yml` + `install/`（含 AGENTS.md、GLOBAL-UPDATE-GUIDE.md 的规范源） |
 | dsh-prompt-dots | `profiles\node_modules\dsh-prompt-dots` | `prompt-dots\UPDATE-GUIDE.md` | `Hua1Q1nG/dsh-prompt-dots` | `lib/ + package.json + cordis.patch.yml` + `tests/` + `UPDATE-GUIDE.md` |
 | dsh-token-monitor | `profiles\node_modules\dsh-token-monitor` | `token-monitor\UPDATE-GUIDE.md` | `Hua1Q1nG/dsh-token-monitor` | `lib/ + package.json + cordis.patch.yml` + `tests/` + `UPDATE-GUIDE.md` |
 | dsh-pwsh-patch（本机专属补丁，自愈） | `profiles\node_modules\dsh-pwsh-patch` | `pwsh-patch\UPDATE-GUIDE.md` | —（本机专属，无仓库、不参与 GitHub 同步） | `lib/ + patch/ + cordis.patch.yml` + `tests/` + `UPDATE-GUIDE.md`（`<DSH_HOME>\pwsh-patch\`） |

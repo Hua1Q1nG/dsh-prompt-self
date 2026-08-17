@@ -9,7 +9,7 @@
 - DSH Desktop：0.2.0（曾验证 0.1.7 / 0.1.9）
 - 核心依赖（全部 `@deepseek-ai/*`）：0.1.0-rc.6
 - cordis：4.0.1
-- 插件版本：dsh-prompt-self-client 0.2.0（画像分级版）
+- 插件版本：dsh-prompt-self-client 0.3.0（画像分级版 + 市场可安装）
 - GitHub 仓库：https://github.com/Hua1Q1nG/dsh-prompt-self（分支 main）
 - 本机 DSH 家目录 `<DSH_HOME>`：`C:\Users\<用户名>\AppData\Roaming\dsh-desktop\harness`
 
@@ -169,7 +169,7 @@
 | @deepseek-ai/dsh-client-ui-settings | 设置面板按 `settings.section` 槽位渲染导航（label 支持函数） |
 | @deepseek-ai/dsh-session-persistence-jsonl | 会话日志 `.jsonl.zstd`（多帧 zstd 容器，不解压也能通过 E2E 行为验证） |
 
-若某个符号消失或签名变化：修改 `plugin/lib/index.js` / `plugin/lib/client.js` 适配新版本，
+若某个符号消失或签名变化：修改 `lib/index.js` / `lib/client.js` 适配新版本，
 重跑第 3 节测试，通过后进入第 5 节同步仓库。
 
 ## 5. 同步 GitHub 仓库（插件或文档有改动时）
@@ -191,7 +191,7 @@
 
 仓库结构（改动需同步到仓库的对应路径）：
 ```
-plugin/                 ← <DSH_HOME>/profiles/node_modules/dsh-prompt-self-client/ 的源
+lib/ + package.json + cordis.patch.yml   ← <DSH_HOME>/profiles/node_modules/dsh-prompt-self-client/ 的源
 install/code-prompt-self/          ← <DSH_HOME>/.agent-presets/code-prompt-self/ 的源
 install/web-profile.cordis.patch.yml
 install/skills/prompt-self-optimizer/    ← SKILL.md 与 profile.md 模板

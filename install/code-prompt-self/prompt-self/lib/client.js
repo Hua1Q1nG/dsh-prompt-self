@@ -101,18 +101,25 @@ window.__ModuleLoader__.load({
 			);
 		}
 
-		function Section({ title, count, children, collapsible }) {
+		function Section({ title, count, children, collapsible, defaultOpen }) {
+			const [open, setOpen] = useState(collapsible ? defaultOpen === true : true);
+			const expanded = collapsible ? open : true;
 			const heading = createElement("div", { style: { fontSize: 13, fontWeight: 600, color: text } },
 				title,
 				count === undefined ? null : createElement("span", { style: { ...itemMutedStyle, marginLeft: 8, fontWeight: 400 } }, "（" + count + "）")
 			);
-			if (collapsible) {
-				return createElement("details", { style: cardStyle, open: count <= 2 },
-					createElement("summary", { style: { cursor: "pointer", listStyle: "none" } }, heading),
-					children
-				);
-			}
-			return createElement("div", { style: cardStyle }, heading, children);
+			return createElement("div", { style: cardStyle },
+				createElement("div", {
+					style: { display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, cursor: collapsible ? "pointer" : "default", userSelect: "none" },
+					onClick: collapsible ? () => setOpen((v) => !v) : undefined,
+					role: collapsible ? "button" : undefined,
+					"aria-expanded": collapsible ? expanded : undefined
+				},
+					heading,
+					collapsible ? createElement("span", { style: { color: muted, fontSize: 12 }, "aria-hidden": "true" }, expanded ? "▾" : "▸") : null
+				),
+				expanded ? children : null
+			);
 		}
 
 		function RecordCard({ record }) {
@@ -187,12 +194,12 @@ window.__ModuleLoader__.load({
 				status === "loading" ? createElement("div", { style: itemMutedStyle }, tr("loading"))
 				: status === "error" ? createElement("div", { style: { color: danger, fontSize: 13 } }, tr("loadFailed") + error)
 				: profile && profile.ok !== false ? createElement(react.Fragment, null,
-					createElement(Section, { title: tr("habits"), count: (profile.habits ?? []).length },
+					createElement(Section, { title: tr("habits"), count: (profile.habits ?? []).length, collapsible: (profile.habits ?? []).length > 0, defaultOpen: false },
 						(profile.habits ?? []).length === 0
 							? createElement("div", { style: itemMutedStyle }, tr("emptyHabits"))
 							: (profile.habits ?? []).map((habit) => createElement("div", { key: habit, style: bulletStyle }, habit))
 					),
-					createElement(Section, { title: tr("rules"), count: (profile.rules ?? []).length },
+					createElement(Section, { title: tr("rules"), count: (profile.rules ?? []).length, collapsible: (profile.rules ?? []).length > 0, defaultOpen: false },
 						(profile.rules ?? []).length === 0
 							? createElement("div", { style: itemMutedStyle }, tr("emptyRules"))
 							: (profile.rules ?? []).map((rule) => createElement("div", { key: rule, style: bulletStyle }, rule))

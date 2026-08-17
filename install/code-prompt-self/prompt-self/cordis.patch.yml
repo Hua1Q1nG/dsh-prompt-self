@@ -1,0 +1,8 @@
+# dsh-prompt-self-client — bundle 补丁（安装入口）。
+# 经 `dsh plugin add` 安装时，dsh.bundle.patch 会把本文件应用到 profile 的 bundle 层：
+#  1. 宿主层 apply（lib/index.js）：注册 /prompt-self/profile 与 /prompt-self/config 两条 Web 路由；
+#  2. dsh.client 半边（lib/client.js）：注册设置页「Prompt 画像」+ 对话输入坞入口。
+# 引擎（消息级改写 + 自动学习）运行在 Agent 层预设中，见 install/code-prompt-self/agent.cordis.yml。
+- insert:
+    - id: prompt-self-client
+      name: dsh-prompt-self-client

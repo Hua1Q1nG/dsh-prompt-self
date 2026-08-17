@@ -1,7 +1,7 @@
 # 追加到 <DSH_HOME>/profiles/web/cordis.patch.yml 的条目（宿主层 + 浏览器客户端半边）。
 #
 # 前提：插件包已复制到 <DSH_HOME>/profiles/node_modules/dsh-prompt-self-client/
-# （本仓库 plugin/ 目录的完整内容），该行通过裸包名解析。
+# （本仓库根目录下 package.json、cordis.patch.yml 与 lib/ 的完整内容），该行通过裸包名解析。
 #
 # 该行做两件事：
 #  1. 宿主层 apply：注册 /prompt-self/profile 与 /prompt-self/config 两条 Web 路由

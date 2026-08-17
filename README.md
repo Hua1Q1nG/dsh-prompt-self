@@ -52,11 +52,11 @@
 
 ```
 .
-├── plugin/                          # 插件包（双面：宿主引擎 + 浏览器半边）
-│   ├── package.json                 # dsh.client 声明与导出
-│   └── lib/
-│       ├── index.js                 # 宿主引擎（改写/学习/路由/开关）
-│       └── client.js                # 浏览器半边（设置页 + 输入坞 UI）
+├── package.json                     # 插件清单（dsh.bundle + dsh.client 声明与导出）
+├── cordis.patch.yml                 # bundle 补丁（安装入口，加载宿主半边）
+├── lib/
+│   ├── index.js                     # 宿主引擎（改写/学习/路由/开关）
+│   └── client.js                    # 浏览器半边（设置页 + 输入坞 UI）
 ├── install/                         # 安装材料
 │   ├── code-prompt-self/            # 用户预设（code 预设副本 + 引擎行）
 │   │   ├── agent.cordis.yml
@@ -68,19 +68,25 @@
 └── tests/
     └── engine.test.mjs              # 引擎自测套件（6 组用例，mock LLM）
 ```
-
 ## 📦 安装（DSH Desktop，Windows）
 
 > 约定：`<DSH_HOME>` 为 DSH 家目录。DSH Desktop 默认为
 > `C:\Users\<你>\AppData\Roaming\dsh-desktop\harness`；其余部署通常为 `~/.dsh`。
 
+### 0. 插件市场一键安装（推荐）
+
+插件已声明 `dsh.bundle` 与 `dsh.client`，可直接从 GitHub 源码安装：
+
+```sh
+dsh plugin --profile web add github:Hua1Q1nG/dsh-prompt-self
+```
+
+这一步装好「宿主层 Web 路由 + 设置页 Prompt 画像 + 对话输入坞」。要启用消息级改写与自动学习引擎，
+还需安装用户预设（下面第 3 步）——引擎运行在 Agent 层，与 web profile 半边是双面结构。
+
 ### 1. 复制插件包到 web profile
 
-把 `plugin/` 的**内容**复制到 `<DSH_HOME>\profiles\node_modules\dsh-prompt-self-client\`：
-
-```powershell
-robocopy plugin "<DSH_HOME>\profiles\node_modules\dsh-prompt-self-client" /E
-```
+把 `package.json`、`cordis.patch.yml` 与 `lib/` 复制到 `<DSH_HOME>\profiles\node_modules\dsh-prompt-self-client\`：
 
 这一步让 web profile 的插件行可以通过裸包名 `dsh-prompt-self-client` 解析到插件，并由模块系统把浏览器半边提供给 Web GUI。
 

@@ -16,7 +16,7 @@ import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Context } from "@deepseek-ai/cordis";
 import { createScope, scopeTarget, bindScopeParent } from "@deepseek-ai/dsh-scope";
-import { apply as engineApply, name, readRuntimeConfig, handleProfileRoute, handleConfigRoute, parseProfile } from "../plugin/lib/index.js";
+import { apply as engineApply, name, readRuntimeConfig, handleProfileRoute, handleConfigRoute, parseProfile } from "../lib/index.js";
 
 function fakeLlm(calls) {
   return {
