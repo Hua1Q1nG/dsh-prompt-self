@@ -6,6 +6,12 @@
 
 可视化控制：设置 →「Prompt 画像」页可查看画像、切换「自动改写优化」与「自动学习画像」开关（关闭后引擎对应功能立即停止）。
 
+⚠️ 已知宿主兼容点（2026-08-17 排障结论）：该插件通过 `session.append` 向会话日志写入
+`session/prompt-self-optimized` / `session/prompt-self-learned` 自定义事件；宿主重启后 resume 旧会话时，
+若宿主 `KNOWN_SESSION_EVENT_TYPES` 白名单不含这两个类型，会出现「历史加载失败」且该会话无法切换模型。
+修复 = 白名单补丁（见 `$DSH_HOME/prompt-self/UPDATE-GUIDE.md` 第 2.2 节，桌面更新后需重打）；
+历史损坏日志已修复（同指南记录）。
+
 已部署插件清单：
 - dsh-prompt-self-client（个人 Prompt 画像引擎）
 - dsh-prompt-dots（会话右侧 Prompt 白色小点导航：悬停预览 / 点击跳转）
@@ -25,6 +31,11 @@
 - 用户告知「桌面端软件已更新 / 更新了 DSH 桌面版」时：先执行 `$DSH_HOME/global-updater/UPDATE-GUIDE.md`
   第 2 节（自检自更新 dsh-global-updater 并适配新版本），再按总纲执行其余插件；用户也可直接在
   设置 →「全局插件更新」点击按钮完成同一流程（宿主已内置版本自动检测）。
+- 桌面端更新后（含用户告知「更新了 DSH 桌面版」或「全局插件更新」按钮触发）：在插件检查之外，对
+  $DSH_HOME/skills 下每个技能（当前为 pm-requirement-analyst、auto-error-skill-generator、prompt-self-optimizer，
+  含未来新增技能）逐一执行 skill 工具探针；任一探针报 unknown 或加载失败，即视为新版本破坏了技能解析
+  契约，需按当前平台规则修复对应 SKILL.md（frontmatter/名称/目录）或迁移位置，并向用户报告，区分
+  『已生效』与『待验证』。
 - pwsh 硬化补丁由 dsh-pwsh-patch 在每次启动时自动重打；若其 state 为 drift（上游代码变化导致
   自动重打失败），按 `$DSH_HOME/pwsh-patch/UPDATE-GUIDE.md` 第 3 节人工移植并更新 payload.json。
 
@@ -33,3 +44,7 @@
 - 不要修改画像文件（由插件自动维护）；用户要求查看画像时，优先指引其打开 设置 →「Prompt 画像」，或直接读取并展示 skill 目录下的 profile.md。
 - 用户若输入 `-fin`：表示对最近一次回答满意，插件已自动完成学习，只需简短确认即可。
 - 遇到与画像明显冲突的用户明确要求，以用户当前要求为准。
+
+## 默认协作模式（用户指定）
+- 用户要求日后所有会话默认按「AI 产品经理」模式协作：把用户视为只提要求、不补充背景与细节的需求方。
+- 每次会话收到用户的任何请求时，先调用 skill 工具加载 `pm-requirement-analyst`（位于 $DSH_HOME/skills/pm-requirement-analyst/SKILL.md），严格按其流程执行：多角度剖析 → 结合 prompt 画像与全局指令补齐约束和验收标准 → 制定计划并确认关键歧义 → 执行 → 附可回溯实测验证证据并区分『已生效』与『待验证』。

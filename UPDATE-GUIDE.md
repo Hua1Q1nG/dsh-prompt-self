@@ -38,6 +38,7 @@
 | 8 | 全局指令 | `AGENTS.md` |
 | 9 | 默认预设 | `settings.yaml` 中 `agent-presets.default` 必须是 `code-prompt-self` |
 | 10 | PTC 预设引擎行（部署补丁） | `<安装目录>\resources\app\node_modules\@deepseek-ai\dsh\config\agent-presets\code\agent.cordis.yml` 末尾应有 `prompt-self-client` 引擎行（让 PTC 模式也运行引擎） |
+| 11 | 事件类型白名单补丁（部署补丁） | `<安装目录>\resources\app\node_modules\@deepseek-ai\dsh-session\lib\index.js`（及 `lib\types\known-event-types.js`）的 `KNOWN_SESSION_EVENT_TYPES` 中必须含 `session/prompt-self-optimized` 与 `session/prompt-self-learned`；缺失时按第 2.2 节重打 |
 
 **已知更新副作用**：DSH Desktop 升级（如 0.1.7→0.1.9、0.1.9→0.2.0）曾把 `settings.yaml` 的
 `agent-presets.default` 重置回 `code`（其余文件不受影响）。第 9 项若不等于
@@ -68,6 +69,35 @@
 
 重打后用 js-yaml + `entryListSchema`（`@deepseek-ai/cordis-plugin-include`）校验该文件可解析，
 并提示用户重启应用（预设发现会实时重读，但重启最稳妥）。
+
+### 2.2 事件类型白名单补丁重打模板（第 11 项缺失时）
+
+**背景（2026-08-17 排障结论）**：插件通过 `session.append` 向会话日志写入
+`session/prompt-self-optimized` / `session/prompt-self-learned` 两类自定义事件。
+宿主在**重启后 resume 旧会话**时，会用 `KNOWN_SESSION_EVENT_TYPES`（静态白名单）
+逐事件校验：白名单外且未带 `ignorable: true` 标记的事件会触发
+`SessionFormatUnsupportedError`，导致该会话**历史加载失败**（UI 文案「历史加载失败：…」），
+且该会话的 `session.models` 一并失败（模型目录/切换不可用）。`session.append` 的公开签名
+无法写入 `ignorable` 标记，因此必须通过白名单补丁解决。
+
+补丁方式：在以下两个文件的 `KNOWN_SESSION_EVENT_TYPES` 数组内、`'session/end-seed'` 之后
+插入两行：
+
+```js
+'session/prompt-self-learned',
+'session/prompt-self-optimized',
+```
+
+- `<安装目录>\resources\app\node_modules\@deepseek-ai\dsh-session\lib\index.js`（运行期实际加载的导出副本）
+- `<安装目录>\resources\app\node_modules\@deepseek-ai\dsh-session\lib\types\known-event-types.js`（保持源文件一致）
+
+补丁需**重启应用**才生效（白名单在宿主进程启动时载入内存）。
+
+**历史数据修复（一次性，已执行）**：2026-08-17 已对含插件事件的历史会话日志
+（`sessions\--E-program~0028E~0029-DSH-DSH~0020Desktop--\` 下 5 个会话）执行过修复：
+解压多帧 zstd 容器 → 为 `session/prompt-self-*` 事件行加 `"ignorable": true` → 重压缩，
+原始文件备份为同目录 `session.jsonl.zstd.bak-2026-08-17T07-15-13`。
+带 `ignorable` 标记的日志即使白名单补丁丢失也能正常 resume，无需再次修复。
 
 ## 3. 完整体检（核心依赖版本变化时必做）
 
